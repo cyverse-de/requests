@@ -8,7 +8,7 @@ import (
 	"github.com/cyverse-de/requests/clients/iplantemail"
 	"github.com/cyverse-de/requests/clients/iplantgroups"
 	"github.com/cyverse-de/requests/clients/notificationagent"
-	"github.com/labstack/echo"
+	"github.com/labstack/echo/v4"
 )
 
 // API defines REST API of the requests service.
