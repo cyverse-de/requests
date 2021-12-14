@@ -1,7 +1,7 @@
 all: requests
 
 install-swagger:
-	which swagger || go get -u github.com/go-swagger/go-swagger/cmd/swagger
+	which swagger || go install github.com/go-swagger/go-swagger/cmd/swagger@v0.28.0
 
 swagger.json: install-swagger
 	go mod vendor && swagger generate spec -o ./swagger.json --scan-models

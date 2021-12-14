@@ -5,7 +5,7 @@ import (
 
 	"github.com/cyverse-de/requests/db"
 	"github.com/cyverse-de/requests/model"
-	"github.com/labstack/echo"
+	"github.com/labstack/echo/v4"
 )
 
 // GetRequestStatusCodesHandler handles GET requests to the /request-status-codes endpoint.

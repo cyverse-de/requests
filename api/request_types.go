@@ -8,7 +8,7 @@ import (
 	"github.com/cyverse-de/requests/db"
 	"github.com/cyverse-de/requests/model"
 	"github.com/cyverse-de/requests/query"
-	"github.com/labstack/echo"
+	"github.com/labstack/echo/v4"
 )
 
 // validateRequestTypeName returns an error if a request type name is invalid.

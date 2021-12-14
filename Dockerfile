@@ -1,8 +1,6 @@
-FROM golang:1.16-alpine
+FROM golang:1.17
 
-RUN apk add --no-cache make
-RUN apk add --no-cache git
-RUN go get -u github.com/jstemmer/go-junit-report
+RUN go install github.com/jstemmer/go-junit-report@latest
 
 ENV CGO_ENABLED=0
 

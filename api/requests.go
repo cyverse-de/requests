@@ -10,7 +10,7 @@ import (
 	"github.com/cyverse-de/requests/model"
 	"github.com/cyverse-de/requests/query"
 
-	"github.com/labstack/echo"
+	"github.com/labstack/echo/v4"
 )
 
 // copyRequestDetails makes a one-level-deep copy of a map. For copying request details, we only need to go one level

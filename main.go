@@ -13,12 +13,12 @@ import (
 	_ "github.com/lib/pq"
 
 	"github.com/cyverse-de/configurate"
-	"github.com/cyverse-de/echo-middleware/redoc"
+	"github.com/cyverse-de/echo-middleware/v2/redoc"
 	"github.com/cyverse-de/requests/api"
 	"github.com/cyverse-de/requests/db"
 	"github.com/go-playground/validator/v10"
-	"github.com/labstack/echo"
-	"github.com/labstack/echo/middleware"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	"github.com/sirupsen/logrus"
 )
 
