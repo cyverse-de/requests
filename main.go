@@ -38,6 +38,8 @@ var (
 	port    = flag.String("port", "8080", "The port to listen to")
 	debug   = flag.Bool("debug", false, "Enable debug logging")
 
+	tracerProvider *tracesdk.TracerProvider
+
 	log *logrus.Entry
 )
 
@@ -85,7 +87,6 @@ func init() {
 	flag.Parse()
 
 	log = buildLoggerEntry()
-	var tracerProvider *tracesdk.TracerProvider
 
 	otelTracesExporter := os.Getenv("OTEL_TRACES_EXPORTER")
 	if otelTracesExporter == "jaeger" {
@@ -102,19 +103,6 @@ func init() {
 			otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
 		}
 	}
-
-	if tracerProvider != nil {
-		tracerCtx, cancel := context.WithCancel(context.Background())
-		defer cancel()
-
-		defer func(tracerContext context.Context) {
-			ctx, cancel := context.WithTimeout(tracerContext, time.Second*5)
-			defer cancel()
-			if err := tracerProvider.Shutdown(ctx); err != nil {
-				log.Fatal(err)
-			}
-		}(tracerCtx)
-	}
 }
 
 // CustomValidator represents a validator that Echo can use to check incoming requests.
@@ -128,6 +116,19 @@ func (cv CustomValidator) Validate(i interface{}) error {
 }
 
 func main() {
+	if tracerProvider != nil {
+		tracerCtx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
+		defer func(tracerContext context.Context) {
+			ctx, cancel := context.WithTimeout(tracerContext, time.Second*5)
+			defer cancel()
+			if err := tracerProvider.Shutdown(ctx); err != nil {
+				log.Fatal(err)
+			}
+		}(tracerCtx)
+	}
+
 	e := echo.New()
 
 	// Set a custom logger.
