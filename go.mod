@@ -16,6 +16,7 @@ require (
 	github.com/spf13/viper v1.10.0 // indirect
 	github.com/uptrace/opentelemetry-go-extra/otelsql v0.1.11 // indirect
 	go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho v0.30.0
+	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.31.0
 	go.opentelemetry.io/otel v1.6.1
 	go.opentelemetry.io/otel/exporters/jaeger v1.6.0
 	go.opentelemetry.io/otel/sdk v1.6.0

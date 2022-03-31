@@ -1,6 +1,7 @@
 package iplantgroups
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -8,7 +9,10 @@ import (
 
 	"github.com/cyverse-de/requests/clients/util"
 	"github.com/pkg/errors"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
+
+var httpClient = http.Client{Transport: otelhttp.NewTransport(http.DefaultTransport)}
 
 // Subject represents a single subject returned by iplant-groups.
 type Subject struct {
@@ -56,7 +60,7 @@ func (c *Client) buildURL(pathComponents ...string) (string, error) {
 }
 
 // GetUserInfo looks up information for a single user by calling iplant-groups.
-func (c *Client) GetUserInfo(username string) (*Subject, error) {
+func (c *Client) GetUserInfo(ctx context.Context, username string) (*Subject, error) {
 	errorMessage := fmt.Sprintf("unable to look up userinformation for %s", username)
 	var err error
 
@@ -66,8 +70,13 @@ func (c *Client) GetUserInfo(username string) (*Subject, error) {
 		return nil, errors.Wrap(err, errorMessage)
 	}
 
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, requestURL, nil)
+	if err != nil {
+		return nil, errors.Wrap(err, errorMessage)
+	}
+
 	// Submit the request.
-	resp, err := http.Get(requestURL)
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		return nil, errors.Wrap(err, errorMessage)
 	}

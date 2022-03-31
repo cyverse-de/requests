@@ -2,13 +2,17 @@ package iplantemail
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 
 	"github.com/pkg/errors"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
+
+var httpClient = http.Client{Transport: otelhttp.NewTransport(http.DefaultTransport)}
 
 // EmailRequestBody represents a request body sent to iplant-email.
 type EmailRequestBody struct {
@@ -29,7 +33,7 @@ func NewClient(baseURL string) *Client {
 }
 
 // SendEmail sends an arbitrary email.
-func (c *Client) sendEmail(requestBody *EmailRequestBody) error {
+func (c *Client) sendEmail(ctx context.Context, requestBody *EmailRequestBody) error {
 	errorMessage := "unable to send email"
 	var err error
 
@@ -39,8 +43,15 @@ func (c *Client) sendEmail(requestBody *EmailRequestBody) error {
 		return errors.Wrap(err, errorMessage)
 	}
 
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL, bytes.NewReader(body))
+	if err != nil {
+		return errors.Wrap(err, errorMessage)
+	}
+
+	req.Header.Set("content-type", "application/json")
+
 	// Submit the request.
-	resp, err := http.Post(c.baseURL, "application/json", bytes.NewReader(body))
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		return errors.Wrap(err, errorMessage)
 	}
@@ -59,8 +70,8 @@ func (c *Client) sendEmail(requestBody *EmailRequestBody) error {
 }
 
 // SendRequestSubmittedEmail sends an email corresponding to a request.
-func (c *Client) SendRequestSubmittedEmail(emailAddress, templateName string, requestDetails interface{}) error {
-	return c.sendEmail(&EmailRequestBody{
+func (c *Client) SendRequestSubmittedEmail(ctx context.Context, emailAddress, templateName string, requestDetails interface{}) error {
+	return c.sendEmail(ctx, &EmailRequestBody{
 		To:       emailAddress,
 		Template: templateName,
 		Subject:  "New Administrative Request",
@@ -69,8 +80,8 @@ func (c *Client) SendRequestSubmittedEmail(emailAddress, templateName string, re
 }
 
 // SendRequestUpdatedEmail sends an email corresponding to a request status update.
-func (c *Client) SendRequestUpdatedEmail(emailAddress, templateName string, requestDetails interface{}) error {
-	return c.sendEmail(&EmailRequestBody{
+func (c *Client) SendRequestUpdatedEmail(ctx context.Context, emailAddress, templateName string, requestDetails interface{}) error {
+	return c.sendEmail(ctx, &EmailRequestBody{
 		To:       emailAddress,
 		Template: templateName,
 		Subject:  "Administrative Request Updated",

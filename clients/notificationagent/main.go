@@ -2,6 +2,7 @@ package notificationagent
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -9,7 +10,10 @@ import (
 
 	"github.com/cyverse-de/requests/clients/util"
 	"github.com/pkg/errors"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
+
+var httpClient = http.Client{Transport: otelhttp.NewTransport(http.DefaultTransport)}
 
 // Client describes a single instance of this client library.
 type Client struct {
@@ -42,7 +46,7 @@ func (c *Client) buildURL(pathComponents ...string) (string, error) {
 }
 
 // SendNotification sends a notification request to the notificaiton agent.
-func (c *Client) SendNotification(requestBody *NotificationRequest) error {
+func (c *Client) SendNotification(ctx context.Context, requestBody *NotificationRequest) error {
 	errorMessage := "unable to send notification"
 	var err error
 
@@ -58,8 +62,15 @@ func (c *Client) SendNotification(requestBody *NotificationRequest) error {
 		return errors.Wrap(err, errorMessage)
 	}
 
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, requestURL, bytes.NewReader(body))
+	if err != nil {
+		return errors.Wrap(err, errorMessage)
+	}
+
+	req.Header.Set("content-type", "application/json")
+
 	// Submit the request.
-	resp, err := http.Post(requestURL, "application/json", bytes.NewReader(body))
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		return errors.Wrap(err, errorMessage)
 	}

@@ -145,7 +145,7 @@ func (a *API) AddRequestHandler(c echo.Context) error {
 	requestDetails["request_details"] = requestSubmission.Details.(map[string]interface{})
 
 	// Send the email.
-	err = a.IPlantEmailClient.SendRequestSubmittedEmail(a.AdminEmail, requestStatusCode.EmailTemplate, requestDetails)
+	err = a.IPlantEmailClient.SendRequestSubmittedEmail(ctx, a.AdminEmail, requestStatusCode.EmailTemplate, requestDetails)
 	if err != nil {
 		return err
 	}
@@ -322,7 +322,7 @@ func (a *API) UpdateRequestHandler(c echo.Context) error {
 	}
 
 	// Look up information about the user who submitted the request.
-	requestingUserInfo, err := a.IPlantGroupsClient.GetUserInfo(request.RequestingUser)
+	requestingUserInfo, err := a.IPlantGroupsClient.GetUserInfo(ctx, request.RequestingUser)
 	if err != nil {
 		return err
 	}
@@ -343,6 +343,7 @@ func (a *API) UpdateRequestHandler(c echo.Context) error {
 		requestStatusCode.DisplayName +
 		"."
 	err = a.NotificationAgentClient.SendNotification(
+		ctx,
 		&notificationagent.NotificationRequest{
 			Type:          "request",
 			User:          *requestingUserInfo.ID,
