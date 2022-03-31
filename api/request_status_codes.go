@@ -9,8 +9,9 @@ import (
 )
 
 // GetRequestStatusCodesHandler handles GET requests to the /request-status-codes endpoint.
-func (a *API) GetRequestStatusCodesHandler(ctx echo.Context) error {
+func (a *API) GetRequestStatusCodesHandler(c echo.Context) error {
 
+	ctx := c.Request().Context()
 	// Start a transaction.
 	tx, err := a.DB.Begin()
 	if err != nil {
@@ -19,7 +20,7 @@ func (a *API) GetRequestStatusCodesHandler(ctx echo.Context) error {
 	defer tx.Rollback()
 
 	// Obtain the list of request status codes.
-	requestStatusCodes, err := db.ListRequestStatusCodes(tx)
+	requestStatusCodes, err := db.ListRequestStatusCodes(ctx, tx)
 	if err != nil {
 		return err
 	}
@@ -31,7 +32,7 @@ func (a *API) GetRequestStatusCodesHandler(ctx echo.Context) error {
 	}
 
 	// Return the response.
-	return ctx.JSON(http.StatusOK, model.RequestStatusCodeListing{
+	return c.JSON(http.StatusOK, model.RequestStatusCodeListing{
 		RequestStatusCodes: requestStatusCodes,
 	})
 }

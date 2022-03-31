@@ -1,6 +1,7 @@
 package db
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 
@@ -12,7 +13,7 @@ import (
 )
 
 // CountRequestsOfType counts the number of requests of the given type that have been submitted by the given user.
-func CountRequestsOfType(tx *sql.Tx, userID, requestTypeID string) (int32, error) {
+func CountRequestsOfType(ctx context.Context, tx *sql.Tx, userID, requestTypeID string) (int32, error) {
 
 	// Prepare the query.
 	query, args, err := psql.Select("count(*)").
@@ -26,14 +27,14 @@ func CountRequestsOfType(tx *sql.Tx, userID, requestTypeID string) (int32, error
 
 	// Query the database and extract the count.
 	var count int32
-	row := tx.QueryRow(query, args...)
+	row := tx.QueryRowContext(ctx, query, args...)
 	err = row.Scan(&count)
 	return count, err
 }
 
 // CountActiveRequestsOfType counts the number of active requests of the given type that have been submitted by the
 // given user.
-func CountActiveRequestsOfType(tx *sql.Tx, userID, requestTypeID string) (int32, error) {
+func CountActiveRequestsOfType(ctx context.Context, tx *sql.Tx, userID, requestTypeID string) (int32, error) {
 
 	// Prepare the primary query.
 	subquery := psql.Select().
@@ -57,13 +58,13 @@ func CountActiveRequestsOfType(tx *sql.Tx, userID, requestTypeID string) (int32,
 
 	// Query the database and extract the count.
 	var count int32
-	row := tx.QueryRow(query, args...)
+	row := tx.QueryRowContext(ctx, query, args...)
 	err = row.Scan(&count)
 	return count, err
 }
 
 // AddRequest adds a new request to the database.
-func AddRequest(tx *sql.Tx, userID, requestTypeID string, details interface{}) (string, error) {
+func AddRequest(ctx context.Context, tx *sql.Tx, userID, requestTypeID string, details interface{}) (string, error) {
 	query := `INSERT INTO requests (request_type_id, requesting_user_id, details)
 			  VALUES ($1, $2, CAST($3 AS json))
 			  RETURNING id`
@@ -75,7 +76,7 @@ func AddRequest(tx *sql.Tx, userID, requestTypeID string, details interface{}) (
 	}
 
 	// Insert the new request.
-	row := tx.QueryRow(query, requestTypeID, userID, encodedDetails)
+	row := tx.QueryRowContext(ctx, query, requestTypeID, userID, encodedDetails)
 
 	// Extract the request ID.
 	var requestID string
@@ -95,7 +96,7 @@ type RequestListingOptions struct {
 }
 
 // GetRequestListing obtains a list of requests from the database.
-func GetRequestListing(tx *sql.Tx, options *RequestListingOptions) ([]*model.RequestSummary, error) {
+func GetRequestListing(ctx context.Context, tx *sql.Tx, options *RequestListingOptions) ([]*model.RequestSummary, error) {
 
 	// Prepare the primary listing query as a subquery.
 	subquery := psql.Select().Distinct().
@@ -151,7 +152,7 @@ func GetRequestListing(tx *sql.Tx, options *RequestListingOptions) ([]*model.Req
 	}
 
 	// Query the database.
-	rows, err := tx.Query(query, args...)
+	rows, err := tx.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -185,7 +186,7 @@ func GetRequestListing(tx *sql.Tx, options *RequestListingOptions) ([]*model.Req
 }
 
 // GetRequestDetails looks up the details of a request.
-func GetRequestDetails(tx *sql.Tx, id string) (*model.RequestDetails, error) {
+func GetRequestDetails(ctx context.Context, tx *sql.Tx, id string) (*model.RequestDetails, error) {
 	query := `SELECT r.id, regexp_replace(u.username, '@.*', ''), rt.name, r.details
 			  FROM requests r
 			  JOIN users u ON r.requesting_user_id = u.id
@@ -193,7 +194,7 @@ func GetRequestDetails(tx *sql.Tx, id string) (*model.RequestDetails, error) {
 			  WHERE r.id = $1`
 
 	// Query the database.
-	row := tx.QueryRow(query, id)
+	row := tx.QueryRowContext(ctx, query, id)
 
 	// Extract the request details.
 	var rd model.RequestDetails
@@ -211,7 +212,7 @@ func GetRequestDetails(tx *sql.Tx, id string) (*model.RequestDetails, error) {
 	}
 
 	// Add status information to the request details.
-	rd.Updates, err = GetRequestStatusUpdates(tx, id)
+	rd.Updates, err = GetRequestStatusUpdates(ctx, tx, id)
 	if err != nil {
 		return nil, err
 	}

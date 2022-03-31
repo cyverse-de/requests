@@ -5,7 +5,7 @@ go 1.13
 require (
 	github.com/Masterminds/squirrel v1.5.2
 	github.com/cyverse-de/configurate v0.0.0-20210914212501-fc18b48e00a9
-	github.com/cyverse-de/dbutil v0.0.0-20210914212612-2b941729c90a
+	github.com/cyverse-de/dbutil v1.0.0
 	github.com/cyverse-de/echo-middleware/v2 v2.0.0
 	github.com/go-playground/validator/v10 v10.9.0
 	github.com/labstack/echo/v4 v4.7.0
@@ -14,8 +14,9 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/viper v1.10.0 // indirect
+	github.com/uptrace/opentelemetry-go-extra/otelsql v0.1.11 // indirect
 	go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho v0.30.0
-	go.opentelemetry.io/otel v1.6.0
+	go.opentelemetry.io/otel v1.6.1
 	go.opentelemetry.io/otel/exporters/jaeger v1.6.0
 	go.opentelemetry.io/otel/sdk v1.6.0
 	golang.org/x/crypto v0.0.0-20211215165025-cf75a172585e // indirect

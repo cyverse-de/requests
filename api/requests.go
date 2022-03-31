@@ -24,26 +24,27 @@ func copyRequestDetails(requestDetails map[string]interface{}) map[string]interf
 }
 
 // AddRequestHandler handles POST requests to the /requests endpoint.
-func (a *API) AddRequestHandler(ctx echo.Context) error {
+func (a *API) AddRequestHandler(c echo.Context) error {
+	ctx := c.Request().Context()
 	var err error
 
 	// Extract and validate the user query parameter.
-	user, err := query.ValidatedQueryParam(ctx, "user", "required")
+	user, err := query.ValidatedQueryParam(c, "user", "required")
 	if err != nil {
-		return ctx.JSON(http.StatusBadRequest, ErrorResponse{
+		return c.JSON(http.StatusBadRequest, ErrorResponse{
 			Message: "missing required query parameter: user",
 		})
 	}
 
 	// Extract and validate the request body.
 	requestSubmission := new(model.RequestSubmission)
-	if err = ctx.Bind(requestSubmission); err != nil {
-		return ctx.JSON(http.StatusBadRequest, ErrorResponse{
+	if err = c.Bind(requestSubmission); err != nil {
+		return c.JSON(http.StatusBadRequest, ErrorResponse{
 			Message: fmt.Sprintf("invalid request body: %s", err.Error()),
 		})
 	}
-	if err = ctx.Validate(requestSubmission); err != nil {
-		return ctx.JSON(http.StatusBadRequest, ErrorResponse{
+	if err = c.Validate(requestSubmission); err != nil {
+		return c.JSON(http.StatusBadRequest, ErrorResponse{
 			Message: fmt.Sprintf("invalid reuqest body: %s", err.Error()),
 		})
 	}
@@ -56,35 +57,35 @@ func (a *API) AddRequestHandler(ctx echo.Context) error {
 	defer tx.Rollback()
 
 	// Look up the user ID.
-	userID, err := db.GetUserID(tx, user, a.UserDomain)
+	userID, err := db.GetUserID(ctx, tx, user, a.UserDomain)
 	if err != nil {
 		return err
 	}
 	if userID == "" {
-		return ctx.JSON(http.StatusBadRequest, ErrorResponse{
+		return c.JSON(http.StatusBadRequest, ErrorResponse{
 			Message: fmt.Sprintf("user not found in DE database: %s", user),
 		})
 	}
 
 	// Look up the request type.
-	requestType, err := db.GetRequestType(tx, requestSubmission.RequestType)
+	requestType, err := db.GetRequestType(ctx, tx, requestSubmission.RequestType)
 	if err != nil {
 		return err
 	}
 	if requestType == nil {
-		return ctx.JSON(http.StatusBadRequest, ErrorResponse{
+		return c.JSON(http.StatusBadRequest, ErrorResponse{
 			Message: fmt.Sprintf("request type not found: %s", requestSubmission.RequestType),
 		})
 	}
 
 	// Verify that the user is permitted to submit more requests of this type if there's an overall limit.
 	if requestType.MaximumRequestsPerUser != nil {
-		count, err := db.CountRequestsOfType(tx, userID, requestType.ID)
+		count, err := db.CountRequestsOfType(ctx, tx, userID, requestType.ID)
 		if err != nil {
 			return err
 		}
 		if count >= *requestType.MaximumRequestsPerUser {
-			return ctx.JSON(http.StatusBadRequest, ErrorResponse{
+			return c.JSON(http.StatusBadRequest, ErrorResponse{
 				Message:   fmt.Sprintf("no more requests of type '%s' may be submitted", requestType.Name),
 				ErrorCode: "ERR_LIMIT_REACHED",
 				Details: &map[string]interface{}{
@@ -98,12 +99,12 @@ func (a *API) AddRequestHandler(ctx echo.Context) error {
 
 	// Verify that the user is permitted to submit more requests of this type if there's an active limit.
 	if requestType.MaximumConcurrentRequestsPerUser != nil {
-		count, err := db.CountActiveRequestsOfType(tx, userID, requestType.ID)
+		count, err := db.CountActiveRequestsOfType(ctx, tx, userID, requestType.ID)
 		if err != nil {
 			return err
 		}
 		if count >= *requestType.MaximumConcurrentRequestsPerUser {
-			return ctx.JSON(http.StatusBadRequest, ErrorResponse{
+			return c.JSON(http.StatusBadRequest, ErrorResponse{
 				Message:   fmt.Sprintf("no more active requests of type '%s' may be submitted", requestType.Name),
 				ErrorCode: "ERR_LIMIT_REACHED",
 				Details: &map[string]interface{}{
@@ -116,13 +117,13 @@ func (a *API) AddRequestHandler(ctx echo.Context) error {
 	}
 
 	// Store the request in the database.
-	requestID, err := db.AddRequest(tx, userID, requestType.ID, requestSubmission.Details)
+	requestID, err := db.AddRequest(ctx, tx, userID, requestType.ID, requestSubmission.Details)
 	if err != nil {
 		return err
 	}
 
 	// Look up the request status code.
-	requestStatusCode, err := db.GetRequestStatusCode(tx, "submitted")
+	requestStatusCode, err := db.GetRequestStatusCode(ctx, tx, "submitted")
 	if err != nil {
 		return err
 	}
@@ -131,7 +132,7 @@ func (a *API) AddRequestHandler(ctx echo.Context) error {
 	}
 
 	// Store the request update in the database.
-	update, err := db.AddRequestStatusUpdate(tx, requestID, requestStatusCode.ID, userID, "Request submitted.")
+	update, err := db.AddRequestStatusUpdate(ctx, tx, requestID, requestStatusCode.ID, userID, "Request submitted.")
 	if err != nil {
 		return err
 	}
@@ -156,7 +157,7 @@ func (a *API) AddRequestHandler(ctx echo.Context) error {
 	}
 
 	// Build the response body.
-	return ctx.JSON(http.StatusOK, model.RequestSummary{
+	return c.JSON(http.StatusOK, model.RequestSummary{
 		ID:             requestID,
 		RequestingUser: user,
 		RequestType:    requestSubmission.RequestType,
@@ -168,7 +169,8 @@ func (a *API) AddRequestHandler(ctx echo.Context) error {
 }
 
 // GetRequestsHandler handles GET requests to the /requests endpoint.
-func (a *API) GetRequestsHandler(ctx echo.Context) error {
+func (a *API) GetRequestsHandler(c echo.Context) error {
+	ctx := c.Request().Context()
 	var err error
 
 	// Start a transaction.
@@ -180,9 +182,9 @@ func (a *API) GetRequestsHandler(ctx echo.Context) error {
 
 	// Extract and validate the include-completed query parameter.
 	defaultIncludeCompleted := false
-	includeCompleted, err := query.ValidateBooleanQueryParam(ctx, "include-completed", &defaultIncludeCompleted)
+	includeCompleted, err := query.ValidateBooleanQueryParam(c, "include-completed", &defaultIncludeCompleted)
 	if err != nil {
-		return ctx.JSON(http.StatusBadRequest, ErrorResponse{
+		return c.JSON(http.StatusBadRequest, ErrorResponse{
 			Message: err.Error(),
 		})
 	}
@@ -190,12 +192,12 @@ func (a *API) GetRequestsHandler(ctx echo.Context) error {
 	// Build the request listing obtions.
 	options := &db.RequestListingOptions{
 		IncludeCompletedRequests: includeCompleted,
-		RequestType:              ctx.QueryParam("request-type"),
-		RequestingUser:           ctx.QueryParam("requesting-user"),
+		RequestType:              c.QueryParam("request-type"),
+		RequestingUser:           c.QueryParam("requesting-user"),
 	}
 
 	// Get the list of matching requests.
-	requests, err := db.GetRequestListing(tx, options)
+	requests, err := db.GetRequestListing(ctx, tx, options)
 	if err != nil {
 		return err
 	}
@@ -207,14 +209,15 @@ func (a *API) GetRequestsHandler(ctx echo.Context) error {
 	}
 
 	// Return the listing.
-	return ctx.JSON(http.StatusOK, &model.RequestListing{
+	return c.JSON(http.StatusOK, &model.RequestListing{
 		Requests: requests,
 	})
 }
 
 // GetRequestDetailsHandler handles GET requests to the /requests/:id endpoint.
-func (a *API) GetRequestDetailsHandler(ctx echo.Context) error {
-	id := ctx.Param("id")
+func (a *API) GetRequestDetailsHandler(c echo.Context) error {
+	ctx := c.Request().Context()
+	id := c.Param("id")
 	var err error
 
 	// Start a transaction
@@ -225,12 +228,12 @@ func (a *API) GetRequestDetailsHandler(ctx echo.Context) error {
 	defer tx.Rollback()
 
 	// Look up the request details.
-	requestDetails, err := db.GetRequestDetails(tx, id)
+	requestDetails, err := db.GetRequestDetails(ctx, tx, id)
 	if err != nil {
 		return err
 	}
 	if requestDetails == nil {
-		return ctx.JSON(http.StatusNotFound, ErrorResponse{
+		return c.JSON(http.StatusNotFound, ErrorResponse{
 			Message: fmt.Sprintf("request %s not found", id),
 		})
 	}
@@ -242,31 +245,32 @@ func (a *API) GetRequestDetailsHandler(ctx echo.Context) error {
 	}
 
 	// Return the response.
-	return ctx.JSON(http.StatusOK, requestDetails)
+	return c.JSON(http.StatusOK, requestDetails)
 }
 
 // UpdateRequestHandler handles POST requests to the /requests/:id/update endpoint.
-func (a *API) UpdateRequestHandler(ctx echo.Context) error {
-	id := ctx.Param("id")
+func (a *API) UpdateRequestHandler(c echo.Context) error {
+	ctx := c.Request().Context()
+	id := c.Param("id")
 	var err error
 
 	// Extract and validate the user query parameter.
-	user, err := query.ValidatedQueryParam(ctx, "user", "required")
+	user, err := query.ValidatedQueryParam(c, "user", "required")
 	if err != nil {
-		return ctx.JSON(http.StatusBadRequest, ErrorResponse{
+		return c.JSON(http.StatusBadRequest, ErrorResponse{
 			Message: "missing required query parameter: user",
 		})
 	}
 
 	// Extract and validate the request body.
 	requestUpdateSubmission := new(model.RequestUpdateSubmission)
-	if err = ctx.Bind(requestUpdateSubmission); err != nil {
-		return ctx.JSON(http.StatusBadRequest, ErrorResponse{
+	if err = c.Bind(requestUpdateSubmission); err != nil {
+		return c.JSON(http.StatusBadRequest, ErrorResponse{
 			Message: fmt.Sprintf("invalid request body: %s", err.Error()),
 		})
 	}
-	if err = ctx.Validate(requestUpdateSubmission); err != nil {
-		return ctx.JSON(http.StatusBadRequest, ErrorResponse{
+	if err = c.Validate(requestUpdateSubmission); err != nil {
+		return c.JSON(http.StatusBadRequest, ErrorResponse{
 			Message: fmt.Sprintf("invalid reuqest body: %s", err.Error()),
 		})
 	}
@@ -279,40 +283,40 @@ func (a *API) UpdateRequestHandler(ctx echo.Context) error {
 	defer tx.Rollback()
 
 	// Look up the updating user ID.
-	userID, err := db.GetUserID(tx, user, a.UserDomain)
+	userID, err := db.GetUserID(ctx, tx, user, a.UserDomain)
 	if err != nil {
 		return err
 	}
 	if userID == "" {
-		return ctx.JSON(http.StatusBadRequest, ErrorResponse{
+		return c.JSON(http.StatusBadRequest, ErrorResponse{
 			Message: fmt.Sprintf("user not found in DE database: %s", user),
 		})
 	}
 
 	// Verify that the request exists.
-	request, err := db.GetRequestDetails(tx, id)
+	request, err := db.GetRequestDetails(ctx, tx, id)
 	if err != nil {
 		return err
 	}
 	if request == nil {
-		return ctx.JSON(http.StatusNotFound, ErrorResponse{
+		return c.JSON(http.StatusNotFound, ErrorResponse{
 			Message: fmt.Sprintf("request %s not found", id),
 		})
 	}
 
 	// Look up the request status code.
-	requestStatusCode, err := db.GetRequestStatusCode(tx, requestUpdateSubmission.StatusCode)
+	requestStatusCode, err := db.GetRequestStatusCode(ctx, tx, requestUpdateSubmission.StatusCode)
 	if err != nil {
 		return err
 	}
 	if requestStatusCode == nil {
-		return ctx.JSON(http.StatusBadRequest, ErrorResponse{
+		return c.JSON(http.StatusBadRequest, ErrorResponse{
 			Message: fmt.Sprintf("invalid request status code: %s", requestUpdateSubmission.StatusCode),
 		})
 	}
 
 	// Save the request status update.
-	update, err := db.AddRequestStatusUpdate(tx, id, requestStatusCode.ID, userID, requestUpdateSubmission.Message)
+	update, err := db.AddRequestStatusUpdate(ctx, tx, id, requestStatusCode.ID, userID, requestUpdateSubmission.Message)
 	if err != nil {
 		return err
 	}
@@ -360,5 +364,5 @@ func (a *API) UpdateRequestHandler(ctx echo.Context) error {
 	}
 
 	// Return the response.
-	return ctx.JSON(http.StatusOK, update)
+	return c.JSON(http.StatusOK, update)
 }

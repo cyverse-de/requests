@@ -1,6 +1,7 @@
 package db
 
 import (
+	"context"
 	"database/sql"
 
 	"github.com/cyverse-de/requests/model"
@@ -25,11 +26,11 @@ func requestStatusCodesFromRows(rows *sql.Rows) ([]*model.RequestStatusCode, err
 }
 
 // ListRequestStatusCodes lists all of the currently available request status codes.
-func ListRequestStatusCodes(tx *sql.Tx) ([]*model.RequestStatusCode, error) {
+func ListRequestStatusCodes(ctx context.Context, tx *sql.Tx) ([]*model.RequestStatusCode, error) {
 	query := "SELECT id, name, display_name, email_template FROM request_status_codes"
 
 	// Query the database.
-	rows, err := tx.Query(query)
+	rows, err := tx.QueryContext(ctx, query)
 	if err != nil {
 		return nil, err
 	}
@@ -40,11 +41,11 @@ func ListRequestStatusCodes(tx *sql.Tx) ([]*model.RequestStatusCode, error) {
 }
 
 // GetRequestStatusCode looks the status code with the given name.
-func GetRequestStatusCode(tx *sql.Tx, status string) (*model.RequestStatusCode, error) {
+func GetRequestStatusCode(ctx context.Context, tx *sql.Tx, status string) (*model.RequestStatusCode, error) {
 	query := "SELECT id, name, display_name, email_template FROM request_status_codes WHERE name = $1"
 
 	// Query the database.
-	rows, err := tx.Query(query, status)
+	rows, err := tx.QueryContext(ctx, query, status)
 	if err != nil {
 		return nil, err
 	}
