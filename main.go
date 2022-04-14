@@ -4,18 +4,11 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"os"
-	"time"
 
 	"github.com/cyverse-de/requests/clients/notificationagent"
 
+	"github.com/cyverse-de/go-mod/otelutils"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/exporters/jaeger"
-	"go.opentelemetry.io/otel/propagation"
-	"go.opentelemetry.io/otel/sdk/resource"
-	tracesdk "go.opentelemetry.io/otel/sdk/trace"
-	semconv "go.opentelemetry.io/otel/semconv/v1.7.0"
 
 	"github.com/cyverse-de/requests/clients/iplantgroups"
 
@@ -33,12 +26,12 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+const serviceName = "requests"
+
 var (
 	cfgPath = flag.String("config", "/etc/iplant/de/jobservices.yml", "The path to the config file")
 	port    = flag.String("port", "8080", "The port to listen to")
 	debug   = flag.Bool("debug", false, "Enable debug logging")
-
-	tracerProvider *tracesdk.TracerProvider
 
 	log *logrus.Entry
 )
@@ -65,44 +58,11 @@ func buildLoggerEntry() *logrus.Entry {
 		"group":   "org.cyverse",
 	})
 }
-func jaegerTracerProvider(url string) (*tracesdk.TracerProvider, error) {
-	// Create the Jaeger exporter
-	exp, err := jaeger.New(jaeger.WithCollectorEndpoint(jaeger.WithEndpoint(url)))
-	if err != nil {
-		return nil, err
-	}
-
-	tp := tracesdk.NewTracerProvider(
-		tracesdk.WithBatcher(exp),
-		tracesdk.WithResource(resource.NewWithAttributes(
-			semconv.SchemaURL,
-			semconv.ServiceNameKey.String("requests"),
-		)),
-	)
-
-	return tp, nil
-}
-
 func init() {
 	flag.Parse()
 
 	log = buildLoggerEntry()
 
-	otelTracesExporter := os.Getenv("OTEL_TRACES_EXPORTER")
-	if otelTracesExporter == "jaeger" {
-		jaegerEndpoint := os.Getenv("OTEL_EXPORTER_JAEGER_ENDPOINT")
-		if jaegerEndpoint == "" {
-			log.Warn("Jaeger set as OpenTelemetry trace exporter, but no Jaeger endpoint configured.")
-		} else {
-			tp, err := jaegerTracerProvider(jaegerEndpoint)
-			if err != nil {
-				log.Fatal(err)
-			}
-			tracerProvider = tp
-			otel.SetTracerProvider(tp)
-			otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
-		}
-	}
 }
 
 // CustomValidator represents a validator that Echo can use to check incoming requests.
@@ -116,18 +76,10 @@ func (cv CustomValidator) Validate(i interface{}) error {
 }
 
 func main() {
-	if tracerProvider != nil {
-		tracerCtx, cancel := context.WithCancel(context.Background())
-		defer cancel()
-
-		defer func(tracerContext context.Context) {
-			ctx, cancel := context.WithTimeout(tracerContext, time.Second*5)
-			defer cancel()
-			if err := tracerProvider.Shutdown(ctx); err != nil {
-				log.Fatal(err)
-			}
-		}(tracerCtx)
-	}
+	var tracerCtx, cancel = context.WithCancel(context.Background())
+	defer cancel()
+	shutdown := otelutils.TracerProviderFromEnv(tracerCtx, serviceName, func(e error) { log.Fatal(e) })
+	defer shutdown()
 
 	e := echo.New()
 

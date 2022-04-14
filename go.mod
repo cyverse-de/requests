@@ -7,6 +7,7 @@ require (
 	github.com/cyverse-de/configurate v0.0.0-20210914212501-fc18b48e00a9
 	github.com/cyverse-de/dbutil v1.0.0
 	github.com/cyverse-de/echo-middleware/v2 v2.0.0
+	github.com/cyverse-de/go-mod/otelutils v0.0.2
 	github.com/go-playground/validator/v10 v10.9.0
 	github.com/labstack/echo/v4 v4.7.0
 	github.com/labstack/gommon v0.3.1
@@ -17,9 +18,6 @@ require (
 	github.com/uptrace/opentelemetry-go-extra/otelsql v0.1.11 // indirect
 	go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho v0.30.0
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.31.0
-	go.opentelemetry.io/otel v1.6.1
-	go.opentelemetry.io/otel/exporters/jaeger v1.6.0
-	go.opentelemetry.io/otel/sdk v1.6.0
 	golang.org/x/crypto v0.0.0-20211215165025-cf75a172585e // indirect
 	golang.org/x/net v0.0.0-20211209124913-491a49abca63 // indirect
 	golang.org/x/sys v0.0.0-20211210111614-af8b64212486 // indirect
