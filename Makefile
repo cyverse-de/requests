@@ -7,7 +7,7 @@ swagger.json: install-swagger
 	go mod vendor && swagger generate spec -o ./swagger.json --scan-models
 
 requests: swagger.json
-	go build
+	go build --buildvcs=false
 
 clean:
 	rm -rf swagger.json requests vendor
