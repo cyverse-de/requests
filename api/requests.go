@@ -54,7 +54,11 @@ func (a *API) AddRequestHandler(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() {
+		if err := tx.Rollback(); err != nil {
+			c.Logger().Errorf("unable to roll back the transaction: %s", err)
+		}
+	}()
 
 	// Look up the user ID.
 	userID, err := db.GetUserID(ctx, tx, user, a.UserDomain)
@@ -178,7 +182,11 @@ func (a *API) GetRequestsHandler(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() {
+		if err := tx.Rollback(); err != nil {
+			c.Logger().Errorf("unable to roll back the transaction: %s", err)
+		}
+	}()
 
 	// Extract and validate the include-completed query parameter.
 	defaultIncludeCompleted := false
@@ -225,7 +233,11 @@ func (a *API) GetRequestDetailsHandler(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() {
+		if err := tx.Rollback(); err != nil {
+			c.Logger().Errorf("unable to roll back the transaction: %s", err)
+		}
+	}()
 
 	// Look up the request details.
 	requestDetails, err := db.GetRequestDetails(ctx, tx, id)
@@ -280,7 +292,11 @@ func (a *API) UpdateRequestHandler(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() {
+		if err := tx.Rollback(); err != nil {
+			c.Logger().Errorf("unable to roll back the transaction: %s", err)
+		}
+	}()
 
 	// Look up the updating user ID.
 	userID, err := db.GetUserID(ctx, tx, user, a.UserDomain)
