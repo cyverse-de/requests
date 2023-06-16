@@ -10,14 +10,18 @@ import (
 
 // GetRequestStatusCodesHandler handles GET requests to the /request-status-codes endpoint.
 func (a *API) GetRequestStatusCodesHandler(c echo.Context) error {
-
 	ctx := c.Request().Context()
+
 	// Start a transaction.
 	tx, err := a.DB.Begin()
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() {
+		if err := tx.Rollback(); err != nil {
+			c.Logger().Errorf("unable to roll back the transaction: %s", err)
+		}
+	}()
 
 	// Obtain the list of request status codes.
 	requestStatusCodes, err := db.ListRequestStatusCodes(ctx, tx)

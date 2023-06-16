@@ -13,7 +13,7 @@ import (
 
 // validateRequestTypeName returns an error if a request type name is invalid.
 func validateRequestTypeName(name string) error {
-	re := regexp.MustCompile("^[\\w-]+$")
+	re := regexp.MustCompile(`^[\w-]+$`)
 	if !re.MatchString(name) {
 		return fmt.Errorf("request type names may only contain alphanumerics, underscores, and hyphens")
 	}
@@ -29,7 +29,11 @@ func (a *API) GetRequestTypesHandler(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() {
+		if err := tx.Rollback(); err != nil {
+			c.Logger().Errorf("unable to roll back the transaction: %s", err)
+		}
+	}()
 
 	// Obtain the list of request types.
 	requestTypes, err := db.ListRequestTypes(ctx, tx)
@@ -95,7 +99,11 @@ func (a *API) RegisterRequestTypeHandler(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() {
+		if err := tx.Rollback(); err != nil {
+			c.Logger().Errorf("unable to roll back the transaction: %s", err)
+		}
+	}()
 
 	// If a request type with the same name already exists, return it.
 	requestType, err := db.GetRequestType(ctx, tx, name)
@@ -136,7 +144,11 @@ func (a *API) UpdateRequestTypesHandler(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() {
+		if err := tx.Rollback(); err != nil {
+			c.Logger().Errorf("unable to roll back the transaction: %s", err)
+		}
+	}()
 
 	// Get the request type.
 	requestType, err := db.GetRequestType(ctx, tx, name)
@@ -207,7 +219,11 @@ func (a *API) GetRequestTypeHandler(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() {
+		if err := tx.Rollback(); err != nil {
+			c.Logger().Errorf("unable to roll back the transaction: %s", err)
+		}
+	}()
 
 	// Get the request type.
 	requestType, err := db.GetRequestType(ctx, tx, name)

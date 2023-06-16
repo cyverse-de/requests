@@ -55,6 +55,9 @@ func CountActiveRequestsOfType(ctx context.Context, tx *sql.Tx, userID, requestT
 		FromSelect(subquery, "subquery").
 		Where(sq.NotEq{"status": []string{"approved", "rejected"}}).
 		ToSql()
+	if err != nil {
+		return 0, err
+	}
 
 	// Query the database and extract the count.
 	var count int32
