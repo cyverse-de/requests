@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"github.com/cyverse-de/requests/clients/util"
@@ -84,7 +84,7 @@ func (c *Client) GetUserInfo(ctx context.Context, username string) (*Subject, er
 
 	// Check the HTTP status code.
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
-		respBody, err := ioutil.ReadAll(resp.Body)
+		respBody, err := io.ReadAll(resp.Body)
 		if err != nil {
 			return nil, errors.Wrap(err, errorMessage)
 		}

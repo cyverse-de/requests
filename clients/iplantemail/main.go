@@ -5,7 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"github.com/pkg/errors"
@@ -59,7 +59,8 @@ func (c *Client) sendEmail(ctx context.Context, requestBody *EmailRequestBody) e
 
 	// Check the HTTP Status code.
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
-		respBody, err := ioutil.ReadAll(resp.Body)
+
+		respBody, err := io.ReadAll(resp.Body)
 		if err != nil {
 			return errors.Wrap(err, errorMessage)
 		}
