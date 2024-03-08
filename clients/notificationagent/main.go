@@ -5,7 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"github.com/cyverse-de/requests/clients/util"
@@ -78,7 +78,7 @@ func (c *Client) SendNotification(ctx context.Context, requestBody *Notification
 
 	// Check the HTTP Status code.
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
-		respBody, err := ioutil.ReadAll(resp.Body)
+		respBody, err := io.ReadAll(resp.Body)
 		if err != nil {
 			return errors.Wrap(err, errorMessage)
 		}
