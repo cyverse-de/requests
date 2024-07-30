@@ -4,12 +4,14 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"regexp"
 )
 
 // GetUserID obtains the internal user ID  for the given username and user domain from the DE database.
 func GetUserID(ctx context.Context, tx *sql.Tx, username, userDomain string) (string, error) {
+	re, _ := regexp.Compile(`@.*$`)
 	query := "SELECT id FROM users WHERE username = $1"
-	qualifiedUsername := fmt.Sprintf("%s@%s", username, userDomain)
+	qualifiedUsername := fmt.Sprintf("%s@%s", re.ReplaceAllString(username, ""), userDomain)
 
 	// Query the database.
 	row := tx.QueryRowContext(ctx, query, qualifiedUsername)

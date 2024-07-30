@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"strings"
 
 	"github.com/cyverse-de/requests/clients/notificationagent"
 
@@ -135,7 +136,7 @@ func main() {
 		Title:                   serviceInfo.Title,
 		Version:                 serviceInfo.Version,
 		DB:                      db,
-		UserDomain:              cfg.GetString("users.domain"),
+		UserDomain:              strings.Trim(cfg.GetString("users.domain"), "@"),
 		AdminEmail:              cfg.GetString("email.request"),
 		IPlantEmailClient:       iplantEmailClient,
 		IPlantGroupsClient:      iplantGroupsClient,
