@@ -1,3 +1,3 @@
-run:
-  skip-files:
-  - ".../main_docs.go"
+issues:
+  exclude-files:
+    - ".../main_docs.go"
