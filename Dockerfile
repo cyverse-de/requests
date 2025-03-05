@@ -1,4 +1,4 @@
-FROM golang:1.21
+FROM golang:1.24
 
 RUN go install github.com/jstemmer/go-junit-report@latest
 
