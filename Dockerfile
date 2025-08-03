@@ -12,6 +12,7 @@ FROM scratch
 
 WORKDIR /app
 
+COPY --from=0 /usr/share/zoneinfo /usr/share/zoneinfo
 COPY --from=0 /go/src/github.com/cyverse-de/requests/requests /bin/requests
 COPY --from=0 /go/src/github.com/cyverse-de/requests/swagger.json swagger.json
 
