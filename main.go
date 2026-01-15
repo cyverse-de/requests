@@ -18,6 +18,7 @@ import (
 	_ "github.com/lib/pq"
 
 	"github.com/cyverse-de/configurate"
+	logmiddleware "github.com/cyverse-de/echo-middleware/v3/log"
 	"github.com/cyverse-de/echo-middleware/v3/redoc"
 	"github.com/cyverse-de/requests/api"
 	"github.com/cyverse-de/requests/db"
@@ -59,6 +60,7 @@ func buildLoggerEntry() *logrus.Entry {
 		"group":   "org.cyverse",
 	})
 }
+
 func init() {
 	flag.Parse()
 
@@ -72,7 +74,7 @@ type CustomValidator struct {
 }
 
 // Validate performs validation for an incoming request.
-func (cv CustomValidator) Validate(i interface{}) error {
+func (cv CustomValidator) Validate(i any) error {
 	return cv.validator.Struct(i)
 }
 
@@ -85,14 +87,14 @@ func main() {
 	e := echo.New()
 
 	// Set a custom logger.
-	e.Logger = Logger{Entry: log}
+	e.Logger = logmiddleware.NewLogger(log)
 
 	// Register a custom validator.
 	e.Validator = &CustomValidator{validator: validator.New()}
 
 	// Add middleware.
 	e.Use(otelecho.Middleware("requests"))
-	e.Use(middleware.Logger())
+	e.Use(middleware.RequestLogger())
 	e.Use(middleware.Recover())
 	e.Use(redoc.Serve(redoc.Opts{Title: "DE Administrative Requests API Documentation"}))
 
