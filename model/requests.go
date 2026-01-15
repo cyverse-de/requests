@@ -8,7 +8,7 @@ type RequestSubmission struct {
 	RequestType string `json:"request_type" validate:"required"`
 
 	// Arbitrary JSON object describing the request details
-	Details interface{} `json:"details" validate:"required"`
+	Details any `json:"details" validate:"required"`
 }
 
 // RequestSummary represents a brief overview of an administrative request.
@@ -32,7 +32,7 @@ type RequestSummary struct {
 	UpdatedDate time.Time `json:"updated_date"`
 
 	// Arbitrary JSON object describing the request details
-	Details interface{} `json:"details"`
+	Details any `json:"details"`
 }
 
 // RequestListing represents a list of requests.
@@ -71,7 +71,7 @@ type RequestDetails struct {
 	RequestType string `json:"request_type"`
 
 	// Arbitrary JSON object describing the request details
-	Details interface{} `json:"details"`
+	Details any `json:"details"`
 
 	// The status updates for this request
 	Updates []*RequestUpdate `json:"updates"`

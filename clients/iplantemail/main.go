@@ -16,10 +16,10 @@ var httpClient = http.Client{Transport: otelhttp.NewTransport(http.DefaultTransp
 
 // EmailRequestBody represents a request body sent to iplant-email.
 type EmailRequestBody struct {
-	To       string      `json:"to"`
-	Template string      `json:"template"`
-	Subject  string      `json:"subject"`
-	Values   interface{} `json:"values"`
+	To       string `json:"to"`
+	Template string `json:"template"`
+	Subject  string `json:"subject"`
+	Values   any    `json:"values"`
 }
 
 // Client describes a single instance of this client library.
@@ -71,7 +71,7 @@ func (c *Client) sendEmail(ctx context.Context, requestBody *EmailRequestBody) e
 }
 
 // SendRequestSubmittedEmail sends an email corresponding to a request.
-func (c *Client) SendRequestSubmittedEmail(ctx context.Context, emailAddress, templateName string, requestDetails interface{}) error {
+func (c *Client) SendRequestSubmittedEmail(ctx context.Context, emailAddress, templateName string, requestDetails any) error {
 	return c.sendEmail(ctx, &EmailRequestBody{
 		To:       emailAddress,
 		Template: templateName,
@@ -81,7 +81,7 @@ func (c *Client) SendRequestSubmittedEmail(ctx context.Context, emailAddress, te
 }
 
 // SendRequestUpdatedEmail sends an email corresponding to a request status update.
-func (c *Client) SendRequestUpdatedEmail(ctx context.Context, emailAddress, templateName string, requestDetails interface{}) error {
+func (c *Client) SendRequestUpdatedEmail(ctx context.Context, emailAddress, templateName string, requestDetails any) error {
 	return c.sendEmail(ctx, &EmailRequestBody{
 		To:       emailAddress,
 		Template: templateName,

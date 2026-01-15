@@ -67,7 +67,7 @@ func CountActiveRequestsOfType(ctx context.Context, tx *sql.Tx, userID, requestT
 }
 
 // AddRequest adds a new request to the database.
-func AddRequest(ctx context.Context, tx *sql.Tx, userID, requestTypeID string, details interface{}) (string, error) {
+func AddRequest(ctx context.Context, tx *sql.Tx, userID, requestTypeID string, details any) (string, error) {
 	query := `INSERT INTO requests (request_type_id, requesting_user_id, details)
 			  VALUES ($1, $2, CAST($3 AS json))
 			  RETURNING id`

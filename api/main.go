@@ -40,9 +40,9 @@ type RootResponse struct {
 // ErrorResponse describes an error response for any endpoint. This type implements the error interface so that it can
 // be returned as an error from existing functions.
 type ErrorResponse struct {
-	Message   string                  `json:"message"`
-	ErrorCode string                  `json:"error_code,omitempty"`
-	Details   *map[string]interface{} `json:"details,omitempty"`
+	Message   string          `json:"message"`
+	ErrorCode string          `json:"error_code,omitempty"`
+	Details   *map[string]any `json:"details,omitempty"`
 }
 
 // ErrorBytes returns a byte-array representation of an ErrorResponse.
