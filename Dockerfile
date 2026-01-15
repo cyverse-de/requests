@@ -1,4 +1,4 @@
-FROM golang:1.24
+FROM golang:1.25
 
 RUN go install github.com/jstemmer/go-junit-report@latest
 
@@ -8,11 +8,10 @@ WORKDIR /go/src/github.com/cyverse-de/requests
 COPY . .
 RUN make
 
-FROM scratch
+FROM gcr.io/distroless/static-debian13
 
 WORKDIR /app
 
-COPY --from=0 /usr/share/zoneinfo /usr/share/zoneinfo
 COPY --from=0 /go/src/github.com/cyverse-de/requests/requests /bin/requests
 COPY --from=0 /go/src/github.com/cyverse-de/requests/swagger.json swagger.json
 
