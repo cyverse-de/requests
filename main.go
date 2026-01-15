@@ -18,7 +18,7 @@ import (
 	_ "github.com/lib/pq"
 
 	"github.com/cyverse-de/configurate"
-	"github.com/cyverse-de/echo-middleware/v2/redoc"
+	"github.com/cyverse-de/echo-middleware/v3/redoc"
 	"github.com/cyverse-de/requests/api"
 	"github.com/cyverse-de/requests/db"
 	"github.com/go-playground/validator/v10"
