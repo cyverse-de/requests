@@ -15,8 +15,8 @@ import (
 
 // copyRequestDetails makes a one-level-deep copy of a map. For copying request details, we only need to go one level
 // deep because this service doesn't need to modify anything below the top level of the map.
-func copyRequestDetails(requestDetails map[string]interface{}) map[string]interface{} {
-	copy := make(map[string]interface{})
+func copyRequestDetails(requestDetails map[string]any) map[string]any {
+	copy := make(map[string]any)
 	for k, v := range requestDetails {
 		copy[k] = v
 	}
@@ -92,7 +92,7 @@ func (a *API) AddRequestHandler(c echo.Context) error {
 			return c.JSON(http.StatusBadRequest, ErrorResponse{
 				Message:   fmt.Sprintf("no more requests of type '%s' may be submitted", requestType.Name),
 				ErrorCode: "ERR_LIMIT_REACHED",
-				Details: &map[string]interface{}{
+				Details: &map[string]any{
 					"requestType":       requestType.Name,
 					"maximumRequests":   *requestType.MaximumRequestsPerUser,
 					"submittedRequests": count,
@@ -111,7 +111,7 @@ func (a *API) AddRequestHandler(c echo.Context) error {
 			return c.JSON(http.StatusBadRequest, ErrorResponse{
 				Message:   fmt.Sprintf("no more active requests of type '%s' may be submitted", requestType.Name),
 				ErrorCode: "ERR_LIMIT_REACHED",
-				Details: &map[string]interface{}{
+				Details: &map[string]any{
 					"requestType":             requestType.Name,
 					"maximumActiveRequests":   *requestType.MaximumConcurrentRequestsPerUser,
 					"activeSubmittedRequests": count,
@@ -142,11 +142,11 @@ func (a *API) AddRequestHandler(c echo.Context) error {
 	}
 
 	// Add required information to a copy of the request details.
-	requestDetails := copyRequestDetails(requestSubmission.Details.(map[string]interface{}))
+	requestDetails := copyRequestDetails(requestSubmission.Details.(map[string]any))
 	requestDetails["username"] = user
 	requestDetails["request_id"] = requestID
 	requestDetails["request_type"] = requestType.Name
-	requestDetails["request_details"] = requestSubmission.Details.(map[string]interface{})
+	requestDetails["request_details"] = requestSubmission.Details.(map[string]any)
 
 	// Send the email.
 	err = a.IPlantEmailClient.SendRequestSubmittedEmail(ctx, a.AdminEmail, requestStatusCode.EmailTemplate, requestDetails)
@@ -344,11 +344,11 @@ func (a *API) UpdateRequestHandler(c echo.Context) error {
 	}
 
 	// Add required information to a copy of the request details.
-	requestDetails := copyRequestDetails(request.Details.(map[string]interface{}))
+	requestDetails := copyRequestDetails(request.Details.(map[string]any))
 	requestDetails["username"] = request.RequestingUser
 	requestDetails["request_id"] = request.ID
 	requestDetails["request_type"] = request.RequestType
-	requestDetails["request_details"] = request.Details.(map[string]interface{})
+	requestDetails["request_details"] = request.Details.(map[string]any)
 	requestDetails["update_message"] = update.Message
 	requestDetails["email_address"] = requestingUserInfo.Email
 	requestDetails["action"] = "request_status_change"

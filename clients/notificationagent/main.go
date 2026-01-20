@@ -27,13 +27,13 @@ func NewClient(baseURL string) *Client {
 
 // NotificationRequest represents a request for a notification.
 type NotificationRequest struct {
-	Type          string      `json:"type"`
-	User          string      `json:"user"`
-	Subject       string      `json:"subject"`
-	Message       string      `json:"message"`
-	Email         bool        `json:"email"`
-	EmailTemplate string      `json:"email_template"`
-	Payload       interface{} `json:"payload"`
+	Type          string `json:"type"`
+	User          string `json:"user"`
+	Subject       string `json:"subject"`
+	Message       string `json:"message"`
+	Email         bool   `json:"email"`
+	EmailTemplate string `json:"email_template"`
+	Payload       any    `json:"payload"`
 }
 
 // buildURL builds the URL to use for the given path components.
