@@ -9,7 +9,7 @@ require (
 	github.com/cyverse-de/echo-middleware/v3 v3.0.1
 	github.com/cyverse-de/go-mod/otelutils v0.0.6
 	github.com/go-playground/validator/v10 v10.30.2
-	github.com/labstack/echo/v4 v4.15.2
+	github.com/labstack/echo/v4 v4.15.3
 	github.com/lib/pq v1.12.3
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.4
