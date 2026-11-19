@@ -9,6 +9,7 @@ import (
 	"github.com/cyverse-de/requests/clients/notificationagent"
 
 	"github.com/cyverse-de/go-mod/otelutils"
+	//nolint:staticcheck // TODO: migrate to github.com/labstack/echo-otel/v4; deferred because span names/attributes differ.
 	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
 
 	"github.com/cyverse-de/requests/clients/iplantgroups"
